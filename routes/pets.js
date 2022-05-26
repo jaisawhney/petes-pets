@@ -16,12 +16,12 @@ module.exports = (app) => {
     var pet = new Pet(req.body);
 
     pet.save()
-      .then((pet) => {
-        res.redirect(`/pets/${pet._id}`);
-      })
-      .catch((err) => {
-        // Handle Errors
-      }) ;
+        .then((pet) => {
+          res.redirect(`/pets/${pet._id}`);
+        })
+        .catch((err) => {
+          // Handle Errors
+        }) ;
   });
 
   // SHOW PET
@@ -41,12 +41,12 @@ module.exports = (app) => {
   // UPDATE PET
   app.put('/pets/:id', (req, res) => {
     Pet.findByIdAndUpdate(req.params.id, req.body)
-      .then((pet) => {
-        res.redirect(`/pets/${pet._id}`)
-      })
-      .catch((err) => {
-        // Handle Errors
-      });
+        .then((pet) => {
+          res.redirect(`/pets/${pet._id}`)
+        })
+        .catch((err) => {
+          // Handle Errors
+        });
   });
 
   // DELETE PET
@@ -59,13 +59,21 @@ module.exports = (app) => {
   // SEARCH PET
   app.get('/search', (req, res) => {
     const term = new RegExp(req.query.term, 'i');
-      Pet.find({
-          $or:[
-              {'name': term},
-              {'species': term}
+    const page = req.query.page || 1
+    Pet.paginate(
+        {
+          $or: [
+            { 'name': term },
+            { 'species': term }
           ]
-      }).exec((err, pets) => {
-          res.render('pets-index', { pets: pets });
-      })
+        },
+        { page: page }).then((results) => {
+      res.render('pets-index', {
+        pets: results.docs,
+        pagesCount: results.pages,
+        currentPage: page,
+        term: req.query.term
+      });
+    });
   });
 }
