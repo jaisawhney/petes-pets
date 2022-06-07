@@ -7,6 +7,9 @@ block content
             legend New Pet
             form(action=`/pets/${pet._id}?_method=PUT`, method="POST")
                 .form-group
+                    label Avatar
+                    input.form-control(name="avatar" type="file" value=pet.picUrl)
+                .form-group
                     label Name
                     input.form-control(name="name" value=pet.name)
                 .form-group
