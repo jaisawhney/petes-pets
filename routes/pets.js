@@ -120,4 +120,21 @@ module.exports = (app) => {
             });
         });
     });
+
+    const stripe = require("stripe")(process.env.PRIVATE_STRIPE_API_KEY);
+
+    //PURCHASE PET
+    app.post('/pets/:id/purchase', (req, res) => {
+        const token = req.body.stripeToken;
+
+        const petId = req.body.petId || req.params.id;
+        stripe.charges.create({
+            amount: 999,
+            currency: 'usd',
+            description: 'Example charge',
+            source: token,
+        }).then(() => {
+            res.redirect(`/pets/${req.params.id}`);
+        });
+    });
 }
