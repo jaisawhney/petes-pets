@@ -1,7 +1,7 @@
 if (document.querySelector('#new-pet')) {
     document.querySelector('#new-pet').addEventListener('submit', (e) => {
         e.preventDefault();
-        let form = document.getElementById("new-pet");
+        let form = document.getElementById('new-pet');
         let pet = new FormData(form);
 
         axios.post('/pets', pet, {

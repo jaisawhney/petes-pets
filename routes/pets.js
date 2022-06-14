@@ -40,11 +40,11 @@ module.exports = (app) => {
     });
 
     // CREATE PET
-    app.post('/pets', upload.single('avatar'), (req, res, next) => {
+    app.post('/pets', upload.single('avatar'), (req, res) => {
         let pet = new Pet(req.body);
 
         if (req.file) {
-            client.upload(req.file.path, {}, (err, versions, meta) => {
+            client.upload(req.file.path, {}, (err, versions) => {
                 if (err) {
                     console.error(err);
                     return res.status(400).send({err: err});
@@ -88,14 +88,14 @@ module.exports = (app) => {
             .then((pet) => {
                 res.redirect(`/pets/${pet._id}`)
             })
-            .catch((err) => {
-                // Handle Errors
+            .catch(err => {
+                console.log(err);
             });
     });
 
     // DELETE PET
     app.delete('/pets/:id', (req, res) => {
-        Pet.findByIdAndRemove(req.params.id).exec((err, pet) => {
+        Pet.findByIdAndRemove(req.params.id).exec(() => {
             return res.redirect('/')
         });
     });
@@ -121,19 +121,28 @@ module.exports = (app) => {
         });
     });
 
-    const stripe = require("stripe")(process.env.PRIVATE_STRIPE_API_KEY);
+    const stripe = require('stripe')(process.env.PRIVATE_STRIPE_API_KEY);
 
     //PURCHASE PET
     app.post('/pets/:id/purchase', (req, res) => {
         const token = req.body.stripeToken;
 
         const petId = req.body.petId || req.params.id;
-        stripe.charges.create({
-            amount: 999,
-            currency: 'usd',
-            description: 'Example charge',
-            source: token,
-        }).then(() => {
+        Pet.findByIdAndUpdate(petId, {
+            purchasedAt: Date.now()
+        }).then((pet) => {
+            stripe.charges.create({
+                amount: pet.price * 100,
+                currency: 'usd',
+                description: `Purchased ${pet.name}, ${pet.species}`,
+                source: token,
+            }).then(() => {
+                res.redirect(`/pets/${req.params.id}`);
+            }).catch(err => {
+                console.log('Error:' + err);
+            });
+        }).catch(err => {
+            console.log('Error: ' + err);
             res.redirect(`/pets/${req.params.id}`);
         });
     });
