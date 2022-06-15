@@ -29,6 +29,8 @@ const client = new Upload(process.env.S3_BUCKET, {
 // MODELS
 const Pet = require('../models/pet');
 
+const mailer = require('../utils/mailer');
+
 // PET ROUTES
 module.exports = (app) => {
 
@@ -136,8 +138,13 @@ module.exports = (app) => {
                 currency: 'usd',
                 description: `Purchased ${pet.name}, ${pet.species}`,
                 source: token,
-            }).then(() => {
-                res.redirect(`/pets/${req.params.id}`);
+            }).then(charge => {
+                const user = {
+                    email: req.body.stripeEmail,
+                    amount: charge.amount / 100,
+                    petName: pet.name
+                };
+                mailer.sendMail(user, req, res);
             }).catch(err => {
                 console.log('Error:' + err);
             });
